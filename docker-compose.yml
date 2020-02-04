@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  postgres:
+    image: 'bitnami/postgresql:latest'
+    environment:
+      - POSTGRESQL_DATABASE=thanks_bot
+      - POSTGRESQL_PASSWORD=password
+    volumes:
+      - postgres-data:/bitnami/postgresql
+  thanks_bot:
+    depends_on:
+      - postgres
+    build: 'thanks_bot/'
+    ports:
+      - "80:3000"
+    environment:
+      - POSTGRES=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=password
+      - SLACK_THANKS_BOT_TOKEN=xox...
+      - SLACK_APP_ID=AAAAAAAAA
+      - SLACK_CLIENT_ID=0000000000.000000000000
+      - SLACK_CLIENT_SECRET=a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1
+      - SLACK_SECRET=b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2
+
+volumes:
+  postgres-data:
+
