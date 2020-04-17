@@ -23,7 +23,7 @@ services:
       - SLACK_CLIENT_ID=0000000000.000000000000
       - SLACK_CLIENT_SECRET=a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1
       - SLACK_SECRET=b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2
-
+      - SLACK_VERIFICATION_TOKEN=.......
 volumes:
   postgres-data:
 

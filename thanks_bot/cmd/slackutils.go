@@ -24,36 +24,41 @@ func randomString(length int) string {
 	return randomStringWithCharset(length, charset)
 }
 
-func parseEscapedMention(mentionStr string) (mention SlackMention, err error) {
+func parseEscapedMention(mentionStr string) (SlackMention, error) {
+	mention := SlackMention{}
+	if len(mentionStr) == 0 {
+		return mention, fmt.Errorf("Mention must have non zero length")
+	}
+
 	parts := strings.Split(mentionStr, "|")
-	if len(parts) != 2 {
-		err = fmt.Errorf("Cannot parse, error with '|'")
-		return
+	// If we have the form <@UXXXXXXXX|name>, take the first element split on |
+	// <@UXXXXXXXX and append > to convert it to the new format. Otherwise the
+	// split will do nothing and it should already be in that form
+	converted := parts[0]
+	if len(parts) > 1 {
+		converted = parts[0] + ">"
 	}
-	if len(parts[0]) < 2 {
-		err = fmt.Errorf("Cannot parse, user id invalid")
-		return
+
+	if converted[1] != '@' || converted[1] == '#' {
+		return mention, fmt.Errorf("Cannot parse, mention type unknown")
 	}
-	if parts[0][1] != '@' || parts[0][1] == '#' {
-		err = fmt.Errorf("Cannot parse, mention type unknown")
-		return
-	}
-	if parts[0][1] == '@' {
+
+	if converted[1] == '@' {
 		mention.Type = "user"
 	} else {
 		mention.Type = "channel"
 	}
-	mention.ID = parts[0][2:]
-	if len(parts[1]) == 0 {
-		err = fmt.Errorf("Cannot parse, name is length zero")
-		return
-	}
-	mention.Name = strings.TrimSuffix(parts[1], ">")
-	return
+
+	mention.ID = converted[2:len(converted)-1]
+	mention.Name = ""
+	return mention, nil
 }
 
 func parseMentions(msg string) (mentions []SlackMention, errors []error) {
-	userRegex := "<@[A-Z0-9]*\\|[a-zA-Z.\\-_]*>"
+	// This regex is more complicated than it needs to be to still support
+	// the old <@XXXXXXX|name> syntax. This is deprecated by is still used
+	// by the commands API. The events API uses the more modern <@UXXXX>
+	userRegex := "<@[A-Z0-9]+(\\|[a-zA-Z0-9][a-zA-Z0-9.\\-_]*)*>"
 	foundIds := make(map[string]bool, 0)
 	r := regexp.MustCompile(userRegex)
 	for _, mentionIndexes := range r.FindAllStringSubmatchIndex(msg, -1) {
